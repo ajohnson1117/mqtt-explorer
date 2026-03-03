@@ -1,7 +1,7 @@
 import { Dispatch } from 'redux'
 import * as path from 'path'
 import { Subscription } from 'mqtt-explorer-backend/src/DataSource/MqttSource'
-import { makeOpenDialogRpc } from '../../../events/OpenDialogRequest'
+import { makeOpenDialogRpc, makeSaveDialogRpc } from '../../../events/OpenDialogRequest'
 import { AppState } from '../reducers'
 import { clearLegacyConnectionOptions, loadLegacyConnectionOptions } from '../model/LegacyConnectionSettings'
 import {
@@ -14,7 +14,7 @@ import { default as persistentStorage, StorageIdentifier } from '../utils/Persis
 import { showError } from './Global'
 import { ActionTypes, Action } from '../reducers/ConnectionManager'
 import { connectionsMigrator } from './migrations/Connection'
-import { rendererRpc, readFromFile } from '../eventBus'
+import { rendererRpc, readFromFile, writeToFile } from '../eventBus'
 
 export interface ConnectionDictionary {
   [s: string]: ConnectionOptions
@@ -181,5 +181,68 @@ async function ensureConnectionsHaveBeenInitialized() {
     await persistentStorage.store(storedConnectionsIdentifier, connections)
 
     clearLegacyConnectionOptions()
+  }
+}
+
+export const toggleFavorite = (connectionId: string) => (dispatch: Dispatch<any>, getState: () => AppState) => {
+  const connection = getState().connectionManager.connections[connectionId]
+  if (!connection) {
+    return
+  }
+  dispatch(updateConnection(connectionId, { favorite: !connection.favorite }))
+  dispatch(saveConnectionSettings() as any)
+}
+
+export const exportConnections = () => async (dispatch: Dispatch<any>, getState: () => AppState) => {
+  try {
+    const saveDialogReturnValue = await rendererRpc.call(makeSaveDialogRpc(), {
+      defaultPath: 'mqtt-explorer-connections.json',
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    })
+
+    const filePath = saveDialogReturnValue.filePath
+    if (!filePath) {
+      return
+    }
+
+    const connections = getState().connectionManager.connections
+    const data = JSON.stringify(connections, null, 2)
+    await rendererRpc.call(writeToFile, { filePath, data })
+  } catch (error) {
+    dispatch(showError(error))
+  }
+}
+
+export const importConnections = () => async (dispatch: Dispatch<any>, getState: () => AppState) => {
+  try {
+    const openDialogReturnValue = await rendererRpc.call(makeOpenDialogRpc(), {
+      properties: ['openFile'],
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    })
+
+    const selectedFile = openDialogReturnValue.filePaths && openDialogReturnValue.filePaths[0]
+    if (!selectedFile) {
+      return
+    }
+
+    const data = await rendererRpc.call(readFromFile, { filePath: selectedFile })
+    const parsed = JSON.parse(data.toString())
+
+    // Validate: must be an object where every value has configVersion: 1
+    if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('Invalid connections file format')
+    }
+    for (const key of Object.keys(parsed)) {
+      if (parsed[key].configVersion !== 1) {
+        throw new Error(`Invalid connection entry: ${key}`)
+      }
+    }
+
+    const existing = getState().connectionManager.connections
+    const merged = { ...existing, ...parsed }
+    dispatch(setConnections(merged))
+    dispatch(saveConnectionSettings() as any)
+  } catch (error) {
+    dispatch(showError(error))
   }
 }

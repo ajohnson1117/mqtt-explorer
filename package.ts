@@ -86,7 +86,7 @@ async function executeBuild() {
       // await buildWithOptions(mac, { platform: 'mac', package: 'zip' })
       break
     default:
-      await buildWithOptions({ ...mac, projectDir: '' }, { platform: 'mac', package: 'mas-dev' })
+      await buildWithOptions({ ...winNsis, projectDir: '.' }, { platform: 'win', package: 'nsis' })
   }
 }
 
