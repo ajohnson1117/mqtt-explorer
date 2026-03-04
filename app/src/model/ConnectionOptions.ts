@@ -27,7 +27,6 @@ export interface ConnectionOptions {
   clientKey?: CertificateParameters
   clientId?: string
   subscriptions: Array<Subscription>
-  favorite?: boolean
 }
 
 export function toMqttConnection(options: ConnectionOptions): MqttOptions | undefined {
