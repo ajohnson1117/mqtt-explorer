@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".claude/start-frontend.js", "--config", "webpack.browser.config.mjs", "--mode", "development"],
+      "port": 8080
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["dist/src/server.js"],
+      "port": 3000
+    }
+  ]
+}

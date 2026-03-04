@@ -38,7 +38,7 @@ class ConnectionSetup extends React.PureComponent<Props, {}> {
     }
 
     return (
-      <div>
+      <div style={{ flex: 1, overflow: 'hidden' }}>
         <Collapse in={!showAdvancedSettings && !showCertificateSettings}>
           <ConnectionSettingsAny connection={connection} />
         </Collapse>
@@ -87,7 +87,7 @@ class ConnectionSetup extends React.PureComponent<Props, {}> {
   }
 }
 
-const connectionHeight = '440px'
+const connectionHeight = '540px'
 const styles = (theme: Theme) => ({
   title: {
     color: theme.palette.text.primary,
@@ -109,8 +109,8 @@ const styles = (theme: Theme) => ({
   },
   root: {
     margin: `calc((100vh - ${connectionHeight}) / 2) auto 0 auto`,
-    minWidth: '800px',
-    maxWidth: '850px',
+    minWidth: '1000px',
+    maxWidth: '1050px',
     height: connectionHeight,
     outline: 'none' as const,
     display: 'flex' as const,
@@ -127,7 +127,8 @@ const styles = (theme: Theme) => ({
     borderRightStyle: 'dotted' as const,
     borderRadius: `${theme.shape.borderRadius}px 0 0 ${theme.shape.borderRadius}px`,
     paddingTop: theme.spacing(2),
-    flex: 3,
+    flex: 4,
+    minWidth: '280px',
     overflow: 'hidden' as const,
     backgroundColor: theme.palette.background.default,
     color: theme.palette.text.primary,
@@ -141,11 +142,14 @@ const styles = (theme: Theme) => ({
     borderRadius: `0 ${theme.shape.borderRadius}px ${theme.shape.borderRadius}px 0`,
     backgroundColor: theme.palette.background.paper,
     padding: theme.spacing(2),
-    flex: 10,
+    flex: 9,
+    overflow: 'hidden' as const,
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
     // Mobile: enable scrolling
     [theme.breakpoints.down('md')]: {
       borderRadius: `${theme.shape.borderRadius}px`,
-      overflowY: 'auto' as const,
+      overflow: 'auto' as const,
     },
   },
   connectionUri: {

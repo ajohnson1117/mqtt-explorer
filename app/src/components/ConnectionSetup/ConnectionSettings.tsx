@@ -72,7 +72,7 @@ function ConnectionSettings(props: Props) {
 
   function renderBasePathInput() {
     return (
-      <Grid item xs={4}>
+      <Grid size={4}>
         <TextField
           label="Basepath"
           className={props.classes.textField}
@@ -103,28 +103,24 @@ function ConnectionSettings(props: Props) {
 
     const protocolItems = protocols.map((value: string) => (
       <MenuItem key={value} value={value}>
-        {value}
-        ://
-        {value === 'mqtt' ? '(Standard)' : '(WebSocket)'}
+        {value}://
       </MenuItem>
     ))
 
     return (
-      <Tooltip title="Use 'mqtt' for standard connections or 'ws' for WebSocket connections" arrow>
-        <TextField
-          select
-          label="Protocol"
-          className={classes.textField}
-          value={connection.protocol}
-          onChange={updateProtocol}
-          margin="dense"
-          inputProps={{
-            'aria-label': 'MQTT protocol',
-          }}
-        >
-          {protocolItems}
-        </TextField>
-      </Tooltip>
+      <TextField
+        select
+        label="Protocol"
+        className={classes.textField}
+        value={connection.protocol}
+        onChange={updateProtocol}
+        margin="dense"
+        inputProps={{
+          'aria-label': 'MQTT protocol',
+        }}
+      >
+        {protocolItems}
+      </TextField>
     )
   }
 
@@ -172,7 +168,7 @@ function ConnectionSettings(props: Props) {
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <form className={classes.container} noValidate autoComplete="off" style={{ flex: 1, overflow: 'auto' }}>
         <Grid container spacing={2}>
-          <Grid item xs={5}>
+          <Grid size={5}>
             <TextField
               autoFocus
               label="Name"
@@ -186,7 +182,7 @@ function ConnectionSettings(props: Props) {
               }}
             />
           </Grid>
-          <Grid item xs={4}>
+          <Grid size={4}>
             <ToggleSwitch
               label="Validate certificate"
               classes={classes}
@@ -194,13 +190,13 @@ function ConnectionSettings(props: Props) {
               toggle={toggleCertValidation}
             />
           </Grid>
-          <Grid item xs={3}>
+          <Grid size={3}>
             <ToggleSwitch label="Encryption (tls)" classes={classes} value={connection.encryption} toggle={toggleTls} />
           </Grid>
-          <Grid item xs={2}>
+          <Grid size={2}>
             {renderProtocols()}
           </Grid>
-          <Grid item xs={7}>
+          <Grid size={7}>
             <TextField
               label="Host"
               className={classes.textField}
@@ -214,7 +210,7 @@ function ConnectionSettings(props: Props) {
               }}
             />
           </Grid>
-          <Grid item xs={3}>
+          <Grid size={3}>
             <TextField
               label="Port"
               className={classes.textField}
@@ -231,7 +227,7 @@ function ConnectionSettings(props: Props) {
             />
           </Grid>
           {requiresBasePath() ? renderBasePathInput() : null}
-          <Grid item xs={requiresBasePath() ? 4 : 6}>
+          <Grid size={requiresBasePath() ? 4 : 6}>
             <TextField
               label="Username"
               className={classes.textField}
@@ -245,7 +241,7 @@ function ConnectionSettings(props: Props) {
               }}
             />
           </Grid>
-          <Grid item xs={requiresBasePath() ? 4 : 6}>
+          <Grid size={requiresBasePath() ? 4 : 6}>
             <TextField
               label="Password"
               className={classes.textField}
@@ -272,14 +268,14 @@ function ConnectionSettings(props: Props) {
           alignItems: 'center',
           paddingTop: '16px',
           borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+          gap: '16px',
         }}
       >
-        <div>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <Tooltip title="Delete this connection permanently" arrow>
             <Button
               variant="contained"
               color="error"
-              className={classes.button}
               onClick={handleDelete}
               aria-label="Delete connection"
             >
@@ -289,7 +285,6 @@ function ConnectionSettings(props: Props) {
           <Tooltip title="Advanced connection settings" arrow>
             <Button
               variant="contained"
-              className={classes.button}
               onClick={props.managerActions.toggleAdvancedSettings}
               data-testid="advanced-button"
               aria-label="Show advanced settings"
@@ -298,12 +293,11 @@ function ConnectionSettings(props: Props) {
             </Button>
           </Tooltip>
         </div>
-        <div>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <Tooltip title="Save connection settings" arrow>
             <Button
               variant="contained"
               color="secondary"
-              className={classes.button}
               onClick={props.managerActions.saveConnectionSettings}
               aria-label="Save connection"
             >

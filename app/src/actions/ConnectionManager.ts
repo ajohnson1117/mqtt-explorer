@@ -1,7 +1,8 @@
 import { Dispatch } from 'redux'
 import * as path from 'path'
+import { v4 } from 'uuid'
 import { Subscription } from 'mqtt-explorer-backend/src/DataSource/MqttSource'
-import { makeOpenDialogRpc } from '../../../events/OpenDialogRequest'
+import { makeOpenDialogRpc, makeSaveDialogRpc } from '../../../events/OpenDialogRequest'
 import { AppState } from '../reducers'
 import { clearLegacyConnectionOptions, loadLegacyConnectionOptions } from '../model/LegacyConnectionSettings'
 import {
@@ -11,10 +12,11 @@ import {
   CertificateParameters,
 } from '../model/ConnectionOptions'
 import { default as persistentStorage, StorageIdentifier } from '../utils/PersistentStorage'
-import { showError } from './Global'
+import { showError, showNotification } from './Global'
 import { ActionTypes, Action } from '../reducers/ConnectionManager'
 import { connectionsMigrator } from './migrations/Connection'
-import { rendererRpc, readFromFile } from '../eventBus'
+import { rendererRpc, readFromFile, writeToFile } from '../eventBus'
+import { isBrowserMode } from '../utils/browserMode'
 
 export interface ConnectionDictionary {
   [s: string]: ConnectionOptions
@@ -165,6 +167,114 @@ export const deleteConnection = (connectionId: string) => (dispatch: Dispatch<an
 
   if (nextSelectedConnection) {
     dispatch(selectConnection(nextSelectedConnection))
+  }
+}
+
+export const exportConnections = () => async (dispatch: Dispatch<any>, getState: () => AppState) => {
+  try {
+    const connections = getState().connectionManager.connections
+    const exportData = JSON.stringify(connections, null, 2)
+
+    if (isBrowserMode) {
+      const blob = new Blob([exportData], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'mqtt-explorer-connections.json'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      return
+    }
+
+    const { canceled, filePath } = await rendererRpc.call(makeSaveDialogRpc(), {
+      title: 'Export Connections',
+      defaultPath: 'mqtt-explorer-connections.json',
+      filters: [{ name: 'JSON Files', extensions: ['json'] }],
+    })
+
+    if (!canceled && filePath) {
+      const base64Data = btoa(unescape(encodeURIComponent(exportData)))
+      await rendererRpc.call(writeToFile, { filePath, data: base64Data })
+      dispatch(showNotification(`Connections exported to ${filePath}`))
+    }
+  } catch (error) {
+    dispatch(showError(error))
+  }
+}
+
+export const importConnections = () => async (dispatch: Dispatch<any>, getState: () => AppState) => {
+  try {
+    let jsonString: string
+
+    if (isBrowserMode) {
+      jsonString = await new Promise<string>((resolve, reject) => {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = '.json'
+        input.onchange = (event: any) => {
+          const file = event.target.files?.[0]
+          if (!file) {
+            reject('No file selected')
+            return
+          }
+          const reader = new FileReader()
+          reader.onload = (e) => resolve(e.target?.result as string)
+          reader.onerror = () => reject('Error reading file')
+          reader.readAsText(file)
+        }
+        input.click()
+      })
+    } else {
+      const openDialogReturnValue = await rendererRpc.call(makeOpenDialogRpc(), {
+        title: 'Import Connections',
+        properties: ['openFile'],
+        filters: [{ name: 'JSON Files', extensions: ['json'] }],
+      })
+
+      const selectedFile = openDialogReturnValue.filePaths && openDialogReturnValue.filePaths[0]
+      if (!selectedFile) {
+        return
+      }
+
+      const data = await rendererRpc.call(readFromFile, { filePath: selectedFile, encoding: 'utf8' })
+      jsonString = typeof data === 'string' ? data : data.toString()
+    }
+
+    const importedConnections = JSON.parse(jsonString)
+
+    if (typeof importedConnections !== 'object' || importedConnections === null || Array.isArray(importedConnections)) {
+      throw 'Invalid file format: expected a connections dictionary'
+    }
+
+    let importCount = 0
+    Object.values(importedConnections).forEach((connection: any) => {
+      if (!connection.name && !connection.host) {
+        return
+      }
+      const newId = v4() as string
+      const newConnection: ConnectionOptions = {
+        ...createEmptyConnection(),
+        ...connection,
+        id: newId,
+      }
+      dispatch(addConnection(newConnection))
+      importCount++
+    })
+
+    if (importCount > 0) {
+      dispatch(saveConnectionSettings() as any)
+      dispatch(showNotification(`Imported ${importCount} connection${importCount !== 1 ? 's' : ''}`))
+    } else {
+      dispatch(showNotification('No valid connections found in file'))
+    }
+  } catch (error) {
+    if (typeof error === 'string') {
+      dispatch(showError(error))
+    } else {
+      dispatch(showError('Failed to import connections. Please check the file format.'))
+    }
   }
 }
 

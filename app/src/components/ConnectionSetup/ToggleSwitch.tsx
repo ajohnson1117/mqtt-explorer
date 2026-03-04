@@ -17,7 +17,7 @@ export function ToggleSwitch(props: { value: boolean; classes: any; toggle: () =
   )
   return (
     <div className={classes.switch}>
-      <FormControlLabel control={toggleSwitch} label={`${label} (${value ? 'On' : 'Off'})`} labelPlacement="bottom" />
+      <FormControlLabel control={toggleSwitch} label={label} labelPlacement="bottom" />
     </div>
   )
 }

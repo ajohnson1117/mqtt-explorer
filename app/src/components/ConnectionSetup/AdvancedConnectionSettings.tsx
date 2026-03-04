@@ -45,7 +45,7 @@ const ConnectionSettings = memo((props: Props) => {
     <div>
       <form className={classes.container} noValidate autoComplete="off">
         <Grid container spacing={3}>
-          <Grid item xs={8} className={classes.gridPadding}>
+          <Grid size={8} className={classes.gridPadding}>
             <TextField
               className={`${classes.fullWidth} advanced-connection-settings-topic-input`}
               label="Topic"
@@ -55,12 +55,12 @@ const ConnectionSettings = memo((props: Props) => {
               onChange={updateSubscription}
             />
           </Grid>
-          <Grid item xs={2} className={classes.gridPadding}>
+          <Grid size={2} className={classes.gridPadding}>
             <div className={classes.qos}>
               <QosSelect label="QoS" selected={qos} onChange={setQos} />
             </div>
           </Grid>
-          <Grid item xs={2} className={classes.gridPadding}>
+          <Grid size={2} className={classes.gridPadding}>
             <Button
               className={classes.button}
               color="secondary"
@@ -71,40 +71,37 @@ const ConnectionSettings = memo((props: Props) => {
               <Add /> Add
             </Button>
           </Grid>
-          <Grid item xs={12} style={{ padding: 0 }}>
+          <Grid size={12} style={{ padding: 0 }}>
             <SubscriptionsAny connection={props.connection} />
           </Grid>
-          <Grid item xs={7} className={classes.gridPadding}>
-            <TextField
-              className={classes.fullWidth}
-              label="MQTT Client ID"
-              margin="normal"
-              value={props.connection.clientId}
-              onChange={handleChange('clientId')}
-            />
-          </Grid>
-          <Grid item xs={3} className={classes.gridPadding}>
-            <div>
+          <Grid size={12} className={classes.gridPadding}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginTop: '8px' }}>
+              <TextField
+                className={classes.fullWidth}
+                label="MQTT Client ID"
+                margin="dense"
+                value={props.connection.clientId}
+                onChange={handleChange('clientId')}
+                style={{ flex: 1 }}
+              />
               <Tooltip title="Manage tls connection certificates" placement="top">
                 <Button
                   variant="contained"
-                  className={classes.button}
+                  className={classes.bottomButton}
                   onClick={() => props.managerActions.toggleCertificateSettings()}
                 >
                   <Lock /> Certificates
                 </Button>
               </Tooltip>
+              <Button
+                variant="contained"
+                className={classes.bottomButton}
+                onClick={props.managerActions.toggleAdvancedSettings}
+                data-testid="back-button"
+              >
+                <Undo /> Back
+              </Button>
             </div>
-          </Grid>
-          <Grid item xs={2} className={classes.gridPadding}>
-            <Button
-              variant="contained"
-              className={classes.button}
-              onClick={props.managerActions.toggleAdvancedSettings}
-              data-testid="back-button"
-            >
-              <Undo /> Back
-            </Button>
           </Grid>
         </Grid>
       </form>
@@ -126,6 +123,10 @@ const styles = (theme: Theme) => ({
   button: {
     marginTop: theme.spacing(3),
     float: 'right' as const,
+  },
+  bottomButton: {
+    whiteSpace: 'nowrap' as const,
+    marginBottom: '4px',
   },
   qos: {
     marginTop: theme.spacing(1),

@@ -1,8 +1,10 @@
 import React, { useCallback } from 'react'
 import { connect } from 'react-redux'
-import { ListItem, Typography } from '@mui/material'
+import { IconButton, ListItem, Typography } from '@mui/material'
 import { withStyles } from '@mui/styles'
 import { Theme } from '@mui/material/styles'
+import Star from '@mui/icons-material/Star'
+import StarBorder from '@mui/icons-material/StarBorder'
 import { bindActionCreators } from 'redux'
 import { toMqttConnection, ConnectionOptions } from '../../../model/ConnectionOptions'
 import { connectionActions, connectionManagerActions } from '../../../actions'
@@ -25,20 +27,44 @@ function ConnectionItem(props: Props) {
     }
   }, [props.connection, props])
 
+  const toggleFavorite = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation()
+      props.actions.connectionManager.updateConnection(props.connection.id, {
+        favorite: !props.connection.favorite,
+      })
+    },
+    [props.connection.id, props.connection.favorite, props.actions.connectionManager]
+  )
+
   const connection = props.connection.host && toMqttConnection(props.connection)
   return (
     <ListItem
       button
       selected={props.selected}
-      style={{ display: 'block' }}
+      style={{ display: 'flex', alignItems: 'center' }}
       onClick={() => props.actions.connectionManager.selectConnection(props.connection.id)}
       onDoubleClick={() => {
         props.actions.connectionManager.selectConnection(props.connection.id)
         connect()
       }}
     >
-      <Typography className={props.classes.name}>{props.connection.name || 'mqtt broker'}</Typography>
-      <Typography className={props.classes.details}>{connection && connection.url}</Typography>
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        <Typography className={props.classes.name}>{props.connection.name || 'mqtt broker'}</Typography>
+        <Typography className={props.classes.details}>{connection && connection.url}</Typography>
+      </div>
+      <IconButton
+        size="small"
+        onClick={toggleFavorite}
+        aria-label={props.connection.favorite ? 'Remove from favorites' : 'Add to favorites'}
+        style={{ padding: 4 }}
+      >
+        {props.connection.favorite ? (
+          <Star fontSize="small" style={{ color: '#FFD700' }} />
+        ) : (
+          <StarBorder fontSize="small" />
+        )}
+      </IconButton>
     </ListItem>
   )
 }

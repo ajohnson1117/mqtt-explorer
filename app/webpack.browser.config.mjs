@@ -79,6 +79,13 @@ export default {
     port: 8080, // Different port from backend server (3000)
     hot: true,
     historyApiFallback: true,
+    client: {
+      overlay: {
+        warnings: false,
+        errors: false,
+        runtimeErrors: false,
+      },
+    },
     proxy: [
       {
         // Proxy API, auth, and socket.io requests to backend server
